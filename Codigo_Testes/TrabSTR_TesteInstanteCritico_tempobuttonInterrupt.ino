@@ -18,6 +18,9 @@
 #define buttonPin 2
 #define relayPin 13
 
+float t1;
+float t2;
+
 LiquidCrystal lcd(12, 11, 5, 4, 3, 7);
 
 SemaphoreHandle_t mutex;
@@ -41,10 +44,10 @@ void setup() {
   int val_cod = 0;
   for(int i = 0; i < 100; i++){
     if(val_cod == 50){
-      val_cod = val_cod*3;
+      val_cod = val_cond*3;
       }
     else{
-      val_cod = val_cod*2;
+      val_cod = val_cond*2;
       }
     }
   pinMode(0,OUTPUT);
@@ -197,7 +200,7 @@ void buttonInterrupt( void *pvParameters)
 {
 
 (void) pvParameters;
-
+  t1 = micros();
   const TickType_t xDelay2000ms = pdMS_TO_TICKS( 2000 );
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
@@ -205,16 +208,18 @@ void buttonInterrupt( void *pvParameters)
   for (;;)
   {
 
-
    if (xSemaphoreTake(interruptSemaphore, portMAX_DELAY) == pdPASS) { //Espera até ser recebida permissão para continuar
       if(sensorState == 1 && xSemaphoreTake(mutex,1) == pdTRUE){ //Escreve se a pressão está elevada (1) e se é fornecido o semáforo necessário
         relayState = 1;
         digitalWrite(relayPin,LOW);
         xSemaphoreGive(mutex); //Libera o Mutex
       }
-      lcd.setCursor(0, 1);
+      lcd.setCursor(1, 0);
       lcd.print("Button Pressed");
     }
+    t2 = micros();
+    Serial.print("buttonInterrupt ");
+    Serial.println(t2-t1);
     vTaskDelayUntil(&xLastWakeTime, xDelay2000ms); 
   }
 }
@@ -242,11 +247,11 @@ void readSensor( void *pvParameters)
       vTaskResume(TaskCloseValve_Handler); //Acorda a Tarefa closeValve
     vTaskDelayUntil(&xLastWakeTime, xDelay500ms);  // Tempo entre as ativações da Tarefa Periódica
   }
+
 }
 //Tarefa que mostra a Tela
 void showScreen( void *pvParameters __attribute__((unused)) ) 
 {
-
   const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000 );
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
@@ -264,7 +269,6 @@ void showScreen( void *pvParameters __attribute__((unused)) )
     else{
       lcd.print("Pressao de Risco");
     }
-
     vTaskDelayUntil(&xLastWakeTime, xDelay1000ms); 
   }
 }
@@ -277,7 +281,6 @@ void openValve( void *pvParameters __attribute__((unused)) )
     xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    vTaskSuspend(TaskOpenValve_Handler); //Suspende a Tarefa por meio do TaskHandler
     //Protege por Mutex o acionamento do relé
     if(xSemaphoreTake(mutex,1) == pdTRUE){
     relayState = 1;
@@ -285,7 +288,7 @@ void openValve( void *pvParameters __attribute__((unused)) )
     xSemaphoreGive(mutex);
     }
     vTaskDelayUntil(&xLastWakeTime, xDelay2000ms); //Garante que a Tarefa seja esporádica e só chegue a cada período
-    
+    vTaskSuspend(TaskOpenValve_Handler); //Suspende a Tarefa por meio do TaskHandler
 
   }
 }
@@ -297,7 +300,6 @@ void closeValve( void *pvParameters __attribute__((unused)) )
     xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    vTaskSuspend(TaskCloseValve_Handler); //Suspende a Tarefa, pois não está sendo utilizada
     //Protege o desacionamento do relé por Mutex
     if(xSemaphoreTake(mutex,1) == pdTRUE){
     relayState = 0;
@@ -306,7 +308,7 @@ void closeValve( void *pvParameters __attribute__((unused)) )
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay2000ms); //Garante que a Tarefa seja esporádica
-    
+    vTaskSuspend(TaskCloseValve_Handler); //Suspende a Tarefa, pois não está sendo utilizada
     
   }
 }
