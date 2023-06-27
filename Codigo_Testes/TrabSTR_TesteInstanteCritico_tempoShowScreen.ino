@@ -245,19 +245,16 @@ void readSensor( void *pvParameters)
       vTaskResume(TaskCloseValve_Handler); //Acorda a Tarefa closeValve
     vTaskDelayUntil(&xLastWakeTime, xDelay500ms);  // Tempo entre as ativações da Tarefa Periódica
   }
-    t2 = micros();
-    Serial.print("ShowScreen");
-    Serial.println(t2-t1);
 }
 //Tarefa que mostra a Tela
 void showScreen( void *pvParameters __attribute__((unused)) ) 
 {
+  t1 = micros();
   const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000 );
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   for (;;)
   {
-    t1 = micros();
     //Limpa as informações da Tela LCD antes da escrita
     //Posiciona o cursor na coluna 3, linha 0;
     lcd.setCursor(0, 0);
@@ -270,6 +267,9 @@ void showScreen( void *pvParameters __attribute__((unused)) )
     else{
       lcd.print("Pressao de Risco");
     }
+        t2 = micros();
+    Serial.print("ShowScreen");
+    Serial.println(t2-t1);
     vTaskDelayUntil(&xLastWakeTime, xDelay1000ms); 
   }
 }
