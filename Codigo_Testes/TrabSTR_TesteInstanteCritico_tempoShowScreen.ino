@@ -28,7 +28,7 @@ TaskHandle_t TaskCloseValve_Handler;
 
 
 int sensorState = 0;
-int relayState = 0;
+int relayState = 1;
 unsigned long t1;
 unsigned long t2;
 
@@ -120,7 +120,7 @@ void setup() {
   Serial.begin(9600);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT_PULLUP);
-  pinMode(sensorPin, INPUT_PULLUP); //Trocar só por Input ao usar Sensor
+  pinMode(sensorPin, INPUT); //Trocar só por Input ao usar Sensor
   pinMode(relayPin, OUTPUT);
   
   while (!Serial) {
@@ -208,7 +208,7 @@ void buttonInterrupt( void *pvParameters)
   for (;;)
   {
    if (xSemaphoreTake(interruptSemaphore, portMAX_DELAY) == pdPASS) { //Espera até ser recebida permissão para continuar
-      //t1 = micros();
+      t1 = micros();
       if(sensorState == 1 && xSemaphoreTake(mutex,1) == pdTRUE){ //Escreve se a pressão está elevada (1) e se é fornecido o semáforo necessário
         relayState = 1;
         digitalWrite(relayPin,LOW);
@@ -217,8 +217,8 @@ void buttonInterrupt( void *pvParameters)
       lcd.setCursor(0, 1);
       lcd.print("Button Pressed");
     }
-    //t2 = micros();
-    //Serial.println(t2-t1);
+    t2 = micros();
+    Serial.println(t2-t1);
     vTaskDelayUntil(&xLastWakeTime, xDelay2000ms); 
   }
 }
@@ -245,7 +245,7 @@ void readSensor( void *pvParameters)
       vTaskResume(TaskOpenValve_Handler); //Acorda a Tarefa openValve
     else if(sensorState == 0 && relayState == 1)
       vTaskResume(TaskCloseValve_Handler); //Acorda a Tarefa closeValve
-    //t2 = micros();
+   // t2 = micros();
     //Serial.println(t2-t1);
     vTaskDelayUntil(&xLastWakeTime, xDelay500ms);  // Tempo entre as ativações da Tarefa Periódica
   }

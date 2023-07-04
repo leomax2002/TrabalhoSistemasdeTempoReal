@@ -28,7 +28,7 @@ TaskHandle_t TaskCloseValve_Handler;
 
 
 int sensorState = 0;
-int relayState = 0;
+int relayState = 1;
 
 void readSensor( void *pvParameters );
 void showScreen( void *pvParameters );
@@ -300,7 +300,6 @@ void closeValve( void *pvParameters __attribute__((unused)) )
     vTaskSuspend(TaskCloseValve_Handler); //Suspende a Tarefa, pois não está sendo utilizada
     //Protege o desacionamento do relé por Mutex
     if(xSemaphoreTake(mutex,1) == pdTRUE){
-    relayState = 0;
     digitalWrite(relayPin,HIGH);
     xSemaphoreGive(mutex);
     }

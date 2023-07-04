@@ -1,0 +1,14 @@
+Tarefa ButtonInterrupt() -> Forçar Bloqueio alterando o Estado do Sensor e apertando o botão para gerar interferência
+4604
+4608
+4608
+4588
+4576
+4584
+4584
+4576
+4580
+4580
+4628
+4580
+
